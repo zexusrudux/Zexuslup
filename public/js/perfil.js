@@ -1,119 +1,60 @@
 const Perfil = {
-  // Ver perfil de otro
   ver(p) {
     App.viendo = p;
     const modal = document.getElementById('modal');
     
     modal.innerHTML = `
-      <div class="perfil-header">
-        <img src="${p.foto}" onerror="this.src='https://i.pravatar.cc/400'">
-        <div class="back" onclick="Perfil.cerrar()">✕ Cerrar</div>
+      <div style="background:#111;position:sticky;top:0;z-index:5;display:flex;align-items:center;padding:12px 14px;gap:12px;border-bottom:1px solid #222">
+        <div onclick="Perfil.cerrar()" style="width:36px;height:36px;background:#222;border-radius:50%;display:grid;place-items:center;cursor:pointer">←</div>
+        <img src="${p.foto}" style="width:38px;height:38px;border-radius:50%;object-fit:cover">
+        <div style="flex:1"><b style="font-size:15px">${p.nombre}</b><br><span style="font-size:11px;color:#0f0">● en línea • ${p._d?.toFixed(2)} km</span></div>
+        <div style="font-size:20px">⋮</div>
       </div>
-      <div style="padding:15px">
-        <h2>${p.nombre}</h2>
+
+      <div style="padding:18px;text-align:center;background:#0e0e0e;border-bottom:1px solid #1a1a1a">
+        <img src="${p.foto}" style="width:110px;height:110px;border-radius:50%;object-fit:cover;border:3px solid #222" onerror="this.src='https://i.pravatar.cc/400'">
+        <h2 style="margin:12px 0 4px">${p.nombre} • 22</h2>
         <div style="margin:8px 0">${(p.gustos||'').split(',').map(g=>g.trim()?`<span class="tag">${g.trim()}</span>`:'').join('')}</div>
-        <p style="color:#aaa;font-size:14px;margin:10px 0">${p.bio||'Sin bio'}</p>
-        <p style="color:#0f0;font-size:12px">📍 ${p._d ? p._d.toFixed(2)+' km de ti' : ''} - Valladolid</p>
+      </div>
+
+      <div style="padding:0 14px">
+        <div class="info-row"><span>📍</span><div><b>Distancia</b><br><small>${p._d?.toFixed(2)} km de ti - Valladolid centro</small></div></div>
+        <div class="info-row"><span>💬</span><div><b>Bio</b><br><small>${p.bio||'Sin bio aún'}</small></div></div>
+        <div class="info-row"><span>🔥</span><div><b>Rol</b><br><small>${p.rol||'Vers'}</small></div></div>
         
-        <button id="btnMsg" onclick="Chat.abrir()">💬 Enviar mensaje</button>
-        <button onclick="Favs.toggle('${p.nombre}')" style="background:#222;color:#fff;margin-top:6px">⭐ Guardar en favs</button>
-        
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0">
+          <button id="btnMsg" onclick="Chat.abrir()" style="background:#fff">Mensaje</button>
+          <button onclick="Favs.toggle('${p.nombre}')" style="background:#1e1e1e;color:#fff;border:1px solid #333">★ Fav</button>
+        </div>
+
         <div id="chatBox" style="display:none">
           <div id="mensajes" class="chat-box"></div>
-          <div class="chat-input">
-            <input id="txtMsg" placeholder="Escribe...">
-            <button onclick="Chat.enviar()" style="width:80px">Enviar</button>
+          <div class="chat-input-wa">
+            <label for="fileAlbum" style="font-size:22px;padding:8px;cursor:pointer">📷</label>
+            <input id="fileAlbum" type="file" multiple accept="image/*" style="display:none" onchange="Chat.previewAlbum(this)">
+            <input id="txtMsg" placeholder="Mensaje..." onkeypress="if(event.key==='Enter')Chat.enviar()">
+            <button onclick="Chat.enviar()" style="width:50px;height:40px;border-radius:50%">➤</button>
           </div>
+          <div id="albumPreview" class="album-preview"></div>
         </div>
+
+        <div style="margin-top:20px"><b style="font-size:12px;color:#666">ÁLBUM PRIVADO</b><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-top:8px">
+          <img src="${p.foto}" style="width:100%;height:90px;object-fit:cover;border-radius:10px">
+          <div style="background:#1a1a1a;border-radius:10px;display:grid;place-items:center;color:#444;font-size:22px">+3</div>
+        </div></div>
       </div>
     `;
     
     modal.style.display = 'block';
     document.body.style.overflow = 'hidden';
-    Chat.cargarMensajes();
   },
-
-  cerrar() {
-    document.getElementById('modal').style.display = 'none';
-    document.body.style.overflow = 'auto';
-    App.viendo = null;
+  cerrar(){ document.getElementById('modal').style.display='none'; document.body.style.overflow='auto'; if(Chat.interval) clearInterval(Chat.interval); },
+  renderMiPerfil(){
+    const yo=App.yo; const div=document.getElementById('tab-perfil'); if(!yo) return;
+    div.innerHTML=`<div style="padding:18px;text-align:center"><img src="${yo.foto}" style="width:100px;height:100px;border-radius:50%"><h2 style="margin-top:10px">${yo.nombre}</h2><p style="color:#666;font-size:11px">${yo.lat.toFixed(4)}, ${yo.lng.toFixed(4)}</p>
+    <textarea id="editBio">${yo.bio||''}</textarea><input id="editGustos" value="${yo.gustos||''}"><input id="editFoto" value="${yo.foto||''}"><button onclick="Perfil.guardar()">Guardar</button><button onclick="Perfil.actualizarGPS()" style="background:#0f0;color:#000">📍 Actualizar GPS</button><button onclick="localStorage.clear();location.reload()" style="background:#222;color:#fff">Salir</button></div>`;
   },
-
-  // Mi propio perfil en pestaña PERFIL
-  renderMiPerfil() {
-    const yo = App.yo;
-    const div = document.getElementById('tab-perfil');
-    if (!yo) return;
-    
-    div.innerHTML = `
-      <div style="height:240px;background:#222"><img src="${yo.foto}" style="width:100%;height:100%;object-fit:cover"></div>
-      <div style="padding:15px">
-        <h2>${yo.nombre}</h2>
-        <p style="color:#666;font-size:11px">Lat: ${yo.lat.toFixed(5)} Lng: ${yo.lng.toFixed(5)} - ubicación real GPS</p>
-        <textarea id="editBio" placeholder="Tu bio">${yo.bio||''}</textarea>
-        <input id="editGustos" value="${yo.gustos||''}" placeholder="gustos: gym, chelas...">
-        <input id="editFoto" value="${yo.foto||''}" placeholder="Link foto nueva">
-        <button onclick="Perfil.guardar()">Guardar perfil</button>
-        <button onclick="Perfil.actualizarGPS()" style="background:#0f0;color:#000">📍 Actualizar mi ubicación real</button>
-        <button onclick="localStorage.clear();location.reload()" style="background:#222;color:#fff">Salir</button>
-      </div>
-    `;
-  },
-
-  async guardar() {
-    App.yo.bio = document.getElementById('editBio').value;
-    App.yo.gustos = document.getElementById('editGustos').value;
-    App.yo.foto = document.getElementById('editFoto').value;
-    localStorage.setItem('yo7M', JSON.stringify(App.yo));
-    await API.registro(App.yo);
-    alert('Guardado ✓');
-  },
-
-  async actualizarGPS() {
-    const pos = await new Promise((res, rej) => {
-      navigator.geolocation.getCurrentPosition(p => res(p), e => rej(e), { enableHighAccuracy: true });
-    }).catch(() => null);
-
-    if (!pos) return alert('No se pudo obtener GPS, activa ubicación');
-
-    App.yo.lat = pos.coords.latitude;
-    App.yo.lng = pos.coords.longitude;
-    localStorage.setItem('yo7M', JSON.stringify(App.yo));
-    await API.registro(App.yo);
-    alert(`Ubicación actualizada: ${App.yo.lat.toFixed(4)}, ${App.yo.lng.toFixed(4)}`);
-    Mapa.init(App.yo.lat, App.yo.lng);
-  }
+  async guardar(){ App.yo.bio=document.getElementById('editBio').value; App.yo.gustos=document.getElementById('editGustos').value; App.yo.foto=document.getElementById('editFoto').value; localStorage.setItem('yo7M',JSON.stringify(App.yo)); await API.registro(App.yo); alert('Guardado ✓'); },
+  async actualizarGPS(){ const pos=await new Promise((r,j)=>navigator.geolocation.getCurrentPosition(r,j,{enableHighAccuracy:true})).catch(()=>null); if(!pos) return alert('Activa GPS'); App.yo.lat=pos.coords.latitude; App.yo.lng=pos.coords.longitude; localStorage.setItem('yo7M',JSON.stringify(App.yo)); await API.registro(App.yo); alert('GPS actualizado'); Mapa.init(App.yo.lat,App.yo.lng); }
 };
-
-// Favs simple con localStorage
-const Favs = {
-  get() { return JSON.parse(localStorage.getItem('favs7M')||'[]'); },
-  toggle(nombre) {
-    let favs = this.get();
-    if (favs.includes(nombre)) {
-      favs = favs.filter(n=>n!==nombre);
-      alert('Quitado de favs');
-    } else {
-      favs.push(nombre);
-      alert('Guardado en favs ⭐');
-    }
-    localStorage.setItem('favs7M', JSON.stringify(favs));
-    this.render();
-  },
-  async render() {
-    const div = document.getElementById('favs');
-    if(!div) return;
-    const favs = this.get();
-    if (!favs.length) { div.innerHTML = '<p style="color:#555;padding:20px;text-align:center">Sin favs aún</p>'; return; }
-    div.innerHTML = '';
-    // cargar todos para filtrar
-    const todos = await API.cerca(App.yo.lat, App.yo.lng);
-    todos.filter(p=>favs.includes(p.nombre)).forEach(p=>{
-      const el=document.createElement('div');
-      el.className='card';
-      el.innerHTML=`<img src="${p.foto}"><div style="padding:5px"><b>${p.nombre}</b><br><span style="color:#0f0;font-size:10px">${p._d.toFixed(2)} km</span></div>`;
-      el.onclick=()=>Perfil.ver(p);
-      div.appendChild(el);
-    });
-  }
-};
+const Favs={ get(){return JSON.parse(localStorage.getItem('favs7M')||'[]')}, toggle(n){let f=this.get(); f=f.includes(n)?f.filter(x=>x!==n):[...f,n]; localStorage.setItem('favs7M',JSON.stringify(f)); alert(f.includes(n)?'Fav agregado':'Quitado'); this.render();}, async render(){const div=document.getElementById('favs'); if(!div) return; const favs=this.get(); if(!favs.length){div.innerHTML='<p style="color:#555;padding:20px;text-align:center">Sin favs</p>';return;} div.innerHTML=''; const todos=await API.cerca(App.yo.lat,App.yo.lng); todos.filter(p=>favs.includes(p.nombre)).forEach(p=>{const el=document.createElement('div'); el.className='card'; el.innerHTML=`<img src="${p.foto}"><div style="padding:5px"><b>${p.nombre}</b><br><span style="color:#0f0;font-size:10px">${p._d.toFixed(2)} km</span></div>`; el.onclick=()=>Perfil.ver(p); div.appendChild(el);}); } };
