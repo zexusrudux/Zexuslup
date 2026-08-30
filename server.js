@@ -1,28 +1,36 @@
 const express = require('express');
+const path = require('path');
 const app = express();
-const http = require('http').createServer(app);
-const io = require('socket.io')(http, { cors: { origin: "*" } });
-
 app.use(express.json());
-app.use(require('cors')());
-app.use(express.static('public')); // tu frontend
+app.use(express.static('public'));
 
-// Ruta de prueba
-app.get('/', (req,res)=> res.send('API Cerca 7M corriendo - 18+'));
+let perfiles = []; // aquí después va Postgres
+let mensajes = {};
 
-// Perfiles cerca (ejemplo sin BD aún, luego conectas Postgres)
 app.get('/api/cerca', (req,res)=>{
-  const { lat, lng } = req.query;
-  // aqui iria tu query a Postgres: SELECT * WHERE distancia < 5km
-  res.json([
-    { id:1, nombre:"Alex", distancia:"0.3 km", lat: parseFloat(lat)+0.001 },
-    { id:2, nombre:"Mau", distancia:"0.8 km", lat: parseFloat(lat)+0.002 }
-  ]);
+  const {lat,lng,clave} = req.query;
+  if(clave !== '7M2026') return res.status(401).json([]);
+  // calcula distancia y ordena
+  const conDist = perfiles.map(p=>{
+    const d = Math.sqrt(Math.pow(p.lat-lat,2)+Math.pow(p.lng-lng,2))*111;
+    return {...p, _d:d};
+  }).sort((a,b)=>a._d-b._d);
+  res.json(conDist);
 });
 
-io.on('connection', socket => {
-  console.log('conectado');
-  socket.on('mensaje', data => io.emit('mensaje', data));
+app.post('/api/registro', (req,res)=>{
+  const p = req.body;
+  perfiles = perfiles.filter(x=>x.nombre!==p.nombre);
+  perfiles.push(p);
+  res.json({ok:true});
 });
 
-http.listen(10000, ()=> console.log('Listo en puerto 10000'));
+app.get('/api/mensajes/:key', (req,res)=> res.json(mensajes[req.params.key]||[]));
+app.post('/api/mensajes/:key', (req,res)=>{
+  if(!mensajes[req.params.key]) mensajes[req.params.key]=[];
+  mensajes[req.params.key].push(req.body);
+  res.json({ok:true});
+});
+
+const port = process.env.PORT || 3000;
+app.listen(port, ()=>console.log('7M corriendo en '+port));
