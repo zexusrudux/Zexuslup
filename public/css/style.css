@@ -38,3 +38,14 @@ button:active{transform:scale(0.98)}
 .chat-item:active{background:#1a1a1a}
 .chat-item img{width:50px;height:50px;border-radius:50%;object-fit:cover;background:#222}
 .mi-pin{font-size:20px;color:#fff;text-shadow:0 0 8px #000}
+.info-row{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid #151515;align-items:flex-start}
+.info-row span{font-size:18px;width:26px;text-align:center}
+.info-row b{font-size:13px}
+.info-row small{font-size:12px;color:#888}
+
+.chat-input-wa{display:flex;gap:8px;align-items:center;background:#1a1a1a;border-radius:30px;padding:5px 8px 5px 12px;margin-top:12px;border:1px solid #2a2a2a}
+.chat-input-wa input{margin:0;background:transparent;padding:8px;flex:1}
+.chat-input-wa button{margin:0;background:#fff;color:#000}
+
+.album-preview{display:flex;gap:8px;overflow-x:auto;padding:10px 0;margin-top:6px}
+.album-preview::-webkit-scrollbar{display:none}
