@@ -4,202 +4,40 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>7M</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<style>
-*{margin:0;box-sizing:border-box;font-family:system-ui}
-body{background:#0a0a0a;color:#fff;padding-bottom:75px}
-.top{background:#111;padding:12px;text-align:center;border-bottom:1px solid #222;position:sticky;top:0;z-index:10}
-.box{background:#1a1a1a;padding:20px;border-radius:12px;border:1px solid #333;max-width:400px;margin:20px auto}
-input,select,textarea{width:100%;padding:12px;margin:6px 0;border-radius:8px;border:0;background:#2a2a2a;color:#fff}
-button{width:100%;padding:12px;border-radius:8px;border:0;background:#fff;color:#000;font-weight:bold;cursor:pointer;margin-top:8px}
-#map{height:32vh;z-index:1}
-.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:8px}
-.card{background:#1e1e1e;border-radius:10px;overflow:hidden;border:1px solid #333;cursor:pointer}
-.card img{width:100%;height:125px;object-fit:cover}
-.tab{display:none}.tab.active{display:block}
-.menu{position:fixed;bottom:0;left:0;right:0;background:#111;border-top:1px solid #222;display:flex;justify-content:space-around;padding:8px 0;z-index:20}
-.menu div{text-align:center;font-size:11px;color:#666;flex:1;cursor:pointer}
-.menu div.active{color:#fff}.menu div span{font-size:20px;display:block}
-/* MODAL ARREGLADO */
-#modal{position:fixed;inset:0;background:#000;z-index:9999;display:none;overflow-y:auto}
-.perfil-header{height:360px;position:relative}
-.perfil-header img{width:100%;height:100%;object-fit:cover}
-.back{position:absolute;top:15px;left:15px;background:rgba(0,0,0,0.7);padding:10px 14px;border-radius:25px;cursor:pointer;color:#fff;z-index:2}
-.tag{display:inline-block;background:#2a2a2a;border:1px solid #333;padding:4px 10px;border-radius:20px;font-size:11px;margin:3px}
-.chat-box{height:40vh;overflow-y:auto;padding:10px;background:#121212;margin-top:10px;border-radius:10px;border:1px solid #222}
-.msg{margin:6px 0;padding:8px 12px;border-radius:14px;max-width:75%;font-size:13px;word-break:break-word}
-.me{background:#fff;color:#000;margin-left:auto}
-.other{background:#2a2a2a}
-.chat-input{display:flex;gap:6px;margin-top:8px}
-.chat-item{padding:12px;display:flex;gap:10px;align-items:center;border-bottom:1px solid #1a1a1a;cursor:pointer;background:#111;margin:4px;border-radius:10px}
-.chat-item img{width:48px;height:48px;border-radius:50%;object-fit:cover}
-</style>
+<link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-
 <div id="login" class="box">
-<h2 style="text-align:center">7M PRIVADO</h2>
-<input id="clave" type="password" placeholder="Clave: 7M2026">
-<input id="nombre" placeholder="Tu nombre">
-<input id="foto" placeholder="Link foto (opcional)">
-<button onclick="login()">Entrar</button>
+  <h2>7M PRIVADO</h2>
+  <input id="clave" type="password" placeholder="Clave: 7M2026">
+  <input id="nombre" placeholder="Tu nombre">
+  <input id="foto" placeholder="Link foto">
+  <button onclick="App.login()">Entrar y usar mi GPS real</button>
+  <p style="color:#666;font-size:11px;margin-top:10px">Usaremos tu ubicación real para ordenar del más cerca al más lejos</p>
 </div>
 
 <div id="main" style="display:none">
-<div class="top"><b id="titulo">CERCA</b></div>
-<div id="tab-cerca" class="tab active"><div id="map"></div><div style="padding:6px 10px;color:#0f0;font-size:11px">Ordenado del más cerca al más lejos</div><div id="lista" class="grid"></div></div>
-<div id="tab-chats" class="tab"><div id="listaChats"></div></div>
-<div id="tab-favs" class="tab"><div style="padding:30px;color:#555;text-align:center">Favs pronto</div></div>
-<div id="tab-perfil" class="tab">
-<div style="height:220px;background:#222"><img id="miFotoBig" style="width:100%;height:100%;object-fit:cover"></div>
-<div style="padding:15px">
-<h2 id="miNombreBig"></h2>
-<textarea id="editBio" placeholder="Tu bio"></textarea>
-<input id="editGustos" placeholder="gustos: gym, chelas...">
-<button onclick="guardarPerfil()">Guardar</button>
-<button onclick="localStorage.clear();location.reload()" style="background:#222;color:#fff">Salir</button>
-</div>
-</div>
-<div class="menu">
-<div class="active" onclick="go('cerca',this)"><span>◉</span>CERCA</div>
-<div onclick="go('chats',this)"><span>💬</span>CHATS</div>
-<div onclick="go('favs',this)"><span>★</span>FAVS</div>
-<div onclick="go('perfil',this)"><span>👤</span>PERFIL</div>
-</div>
+  <div class="top"><b id="titulo">CERCA</b></div>
+  <div id="tab-cerca" class="tab active"><div id="map"></div><div id="lista" class="grid"></div></div>
+  <div id="tab-chats" class="tab"><div id="listaChats"></div></div>
+  <div id="tab-favs" class="tab"><div id="favs" class="grid"></div></div>
+  <div id="tab-perfil" class="tab"></div>
+  <div class="menu">
+    <div class="active" onclick="App.go('cerca',this)"><span>◉</span>CERCA</div>
+    <div onclick="App.go('chats',this)"><span>💬</span>CHATS</div>
+    <div onclick="App.go('favs',this)"><span>★</span>FAVS</div>
+    <div onclick="App.go('perfil',this)"><span>👤</span>PERFIL</div>
+  </div>
 </div>
 
-<div id="modal">
-<div class="perfil-header"><img id="vFoto"><div class="back" onclick="cerrarModal()">✕ Cerrar</div></div>
-<div style="padding:15px">
-<h2 id="vNombre"></h2><div id="vTags"></div>
-<p id="vBio" style="color:#aaa;margin:10px 0;font-size:14px"></p>
-<p id="vDist" style="color:#0f0;font-size:12px;margin-bottom:10px"></p>
-<button id="btnMsg" onclick="abrirChat()">💬 Enviar mensaje</button>
-<div id="chatBox" style="display:none">
-<div id="mensajes" class="chat-box"></div>
-<div class="chat-input"><input id="txtMsg" placeholder="Escribe..."><button onclick="enviarMsg()" style="width:80px">Enviar</button></div>
-</div>
-</div>
-</div>
+<div id="modal"></div>
 
-<script>
-const CLAVE="7M2026";
-let yo=JSON.parse(localStorage.getItem('yo7M')||'null');
-let viendo=null, map, listaPerfiles=[], todosMensajes=[];
-
-async function login(){
- if(document.getElementById('clave').value!==CLAVE) return alert('Clave mal');
- const n=document.getElementById('nombre').value; if(!n) return alert('Nombre');
- const f=document.getElementById('foto').value||`https://i.pravatar.cc/400?u=${encodeURIComponent(n)}`;
- yo={id:Date.now().toString(),nombre:n,foto:f,lat:20.6896+Math.random()*0.01,lng:-88.2014+Math.random()*0.01,rol:'Vers',bio:'En 7M Valladolid',gustos:'tranqui'};
- localStorage.setItem('yo7M',JSON.stringify(yo));
- await fetch('/api/registro',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(yo)});
- iniciar();
-}
-function iniciar(){
- document.getElementById('login').style.display='none'; document.getElementById('main').style.display='block';
- document.getElementById('miNombreBig').textContent=yo.nombre; document.getElementById('miFotoBig').src=yo.foto;
- setTimeout(()=>{ 
-   map=L.map('map').setView([yo.lat,yo.lng],13); 
-   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map); 
-   L.marker([yo.lat,yo.lng]).addTo(map).bindPopup('Tú'); 
-   cargarCerca(); 
- },500);
-}
-async function cargarCerca(){
- try{
- const res=await fetch(`/api/cerca?lat=${yo.lat}&lng=${yo.lng}&clave=${CLAVE}`).then(r=>r.json());
- listaPerfiles=res.filter(p=>p.nombre!==yo.nombre);
- const lista=document.getElementById('lista'); lista.innerHTML='';
- listaPerfiles.forEach(p=>{
-   const el=document.createElement('div'); el.className='card';
-   el.innerHTML=`<img src="${p.foto}" onerror="this.src='https://i.pravatar.cc/400'"><div style="padding:5px"><b style="font-size:11px">${p.nombre}</b><br><span style="font-size:10px;color:#0f0">${(p._d||0).toFixed(2)} km</span></div>`;
-   el.onclick=()=>verPerfil(p); lista.appendChild(el);
-   if(map){
-     const m=L.marker([p.lat,p.lng]).addTo(map);
-     m.on('click',()=>verPerfil(p));
-   }
- });
- }catch(e){ console.log(e); }
-}
-function verPerfil(p){
- viendo=p;
- document.getElementById('modal').style.display='block';
- document.body.style.overflow='hidden';
- document.getElementById('vFoto').src=p.foto;
- document.getElementById('vNombre').textContent=p.nombre;
- document.getElementById('vBio').textContent=p.bio||'Sin bio';
- document.getElementById('vDist').textContent=`📍 ${(p._d||0).toFixed(2)} km de ti - Valladolid`;
- document.getElementById('vTags').innerHTML=(p.gustos||'').split(',').map(g=>g.trim()?`<span class="tag">${g.trim()}</span>`:'').join('');
- document.getElementById('chatBox').style.display='none';
- document.getElementById('btnMsg').style.display='block';
-}
-function cerrarModal(){
- document.getElementById('modal').style.display='none';
- document.body.style.overflow='auto';
- document.getElementById('chatBox').style.display='none';
- viendo=null;
-}
-function abrirChat(){
- document.getElementById('chatBox').style.display='block';
- document.getElementById('btnMsg').style.display='none';
- cargarMensajes();
-}
-async function cargarMensajes(){
- if(!viendo) return;
- const key=[yo.nombre,viendo.nombre].sort().join('-');
- const msgs=await fetch(`/api/mensajes/${key}?clave=${CLAVE}`).then(r=>r.json()).catch(()=>[]);
- const div=document.getElementById('mensajes'); div.innerHTML='';
- msgs.forEach(m=>{
-   const clase = m.de===yo.nombre ? 'me' : 'other';
-   div.innerHTML+=`<div class="msg ${clase}">${m.texto}</div>`;
- });
- div.scrollTop=div.scrollHeight;
-}
-async function enviarMsg(){
- const txt=document.getElementById('txtMsg').value.trim(); if(!txt||!viendo) return;
- const key=[yo.nombre,viendo.nombre].sort().join('-');
- await fetch(`/api/mensajes/${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({de:yo.nombre,text:txt,clave:CLAVE})});
- document.getElementById('txtMsg').value='';
- await cargarMensajes();
- await cargarChatsLista();
-}
-async function cargarChatsLista(){
- // pide todos los mensajes donde aparezco
- try{
- const res=await fetch(`/api/mischats?yo=${encodeURIComponent(yo.nombre)}&clave=${CLAVE}`).then(r=>r.json());
- const div=document.getElementById('listaChats');
- if(!res.length){ div.innerHTML='<p style="text-align:center;color:#555;padding:30px">Aún no hay chats.<br>Ve a CERCA y escribe a alguien</p>'; return; }
- div.innerHTML='';
- res.forEach(c=>{
-   const otro = c.key.split('-').find(n=>n!==yo.nombre);
-   const perfil = listaPerfiles.find(p=>p.nombre===otro) || {foto:'https://i.pravatar.cc/100?u='+otro, nombre:otro};
-   div.innerHTML+=`<div class="chat-item" onclick="abrirChatDeLista('${otro}')"><img src="${perfil.foto}"><div><b>${otro}</b><br><span style="font-size:11px;color:#888">${(c.ultimo||'').slice(0,30)}</span></div><div style="margin-left:auto;color:#0f0;font-size:10px">${c.total} msgs</div></div>`;
- });
- }catch(e){ console.log(e); }
-}
-async function abrirChatDeLista(nombreOtro){
- let p = listaPerfiles.find(x=>x.nombre===nombreOtro);
- if(!p){ p={nombre:nombreOtro,foto:`https://i.pravatar.cc/400?u=${nombreOtro}`,_d:0,bio:'',gustos:''}; }
- verPerfil(p);
- setTimeout(()=>abrirChat(),100);
-}
-function go(tab,el){
- document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
- document.getElementById('tab-'+tab).classList.add('active');
- document.querySelectorAll('.menu div').forEach(m=>m.classList.remove('active'));
- el.classList.add('active');
- document.getElementById('titulo').textContent=tab.toUpperCase();
- if(tab==='cerca'&&map) setTimeout(()=>{map.invalidateSize();cargarCerca();},200);
- if(tab==='chats') cargarChatsLista();
-}
-async function guardarPerfil(){
- yo.bio=document.getElementById('editBio').value; yo.gustos=document.getElementById('editGustos').value;
- localStorage.setItem('yo7M',JSON.stringify(yo));
- await fetch('/api/registro',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(yo)});
- alert('Guardado');
-}
-if(yo){ document.getElementById('login').style.display='none'; document.getElementById('main').style.display='block'; iniciar(); }
-</script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/mapa.js"></script>
+<script src="/js/cerca.js"></script>
+<script src="/js/chat.js"></script>
+<script src="/js/perfil.js"></script>
+<script src="/js/app.js"></script>
 </body>
  </html>
